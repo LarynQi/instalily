@@ -1,0 +1,11 @@
+improvements
+
+- looking into existing pipelines: https://docs.mendable.ai/mendable-api/ingestion
+- light-weight vector DBs: https://ai.meta.com/tools/faiss/
+
+struggles
+- first iteration worked OK on general queries like "The ice maker on my Whirlpool fridge is not working. How
+can I fix it?"
+  - not as detailed responses as just vanilla GPT3.5
+- vector DB searches failed for queries for specific parts or models like "How can I install part number PS11752778?"
+  - idea: do a direct keyword search for particular parts or models first, then go to vector DB if search fails
