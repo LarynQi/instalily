@@ -9,3 +9,8 @@ can I fix it?"
   - not as detailed responses as just vanilla GPT3.5
 - vector DB searches failed for queries for specific parts or models like "How can I install part number PS11752778?"
   - idea: do a direct keyword search for particular parts or models first, then go to vector DB if search fails
+
+
+ideas:
+- feed past historical messages into context
+- (PS_number OR manufacturer_number) -> pinecone instance

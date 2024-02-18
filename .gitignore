@@ -1,3 +1,11 @@
 *.env
 */env/*
 .key
+*/db-old/*
+*/old-faiss/*
+*/env/*
+*/out
+*requirements2.txt
+*test.py
+*.DS_Store
+frontend/
