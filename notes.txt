@@ -14,3 +14,7 @@ can I fix it?"
 ideas:
 - feed past historical messages into context
 - (PS_number OR manufacturer_number) -> pinecone instance
+
+links:
+- https://blog.pamelafox.org/2024/02/rag-techniques-cleaning-user-questions.html
+- https://www.youtube.com/watch?v=rKRQce7zx3U

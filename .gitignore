@@ -9,5 +9,9 @@
 *test.py
 *.DS_Store
 */node_modules/*
-backend/
 scraper/
+*/db/*
+*ping.sh
+*tmp.py
+*/__pycache__/*
+*unstructured_data.csv

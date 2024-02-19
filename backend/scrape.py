@@ -34,12 +34,10 @@ def scrape(urls=URLS, write=True, write_header=True):
             f.write('item_name,PS_number,manufacturer,manufacturer_number,text,url\n')
         with open(STRUCTURED_OUT, 'w') as f:
             f.write('PS_number,manufacturer_number,description,reviews,troubleshooting,repair_stories,q_a\n')
-    # for url in tqdm(urls, position=0, desc='item types', leave=False):
     for url in urls:
         SEEN.add(url)
         main_resp = requests.get(url)
         main_soup = BeautifulSoup(main_resp.content, 'html5lib')
-        # print(soup.prettify())
         paths = []
         item_names = []
         for pop_item in main_soup.findAll('a', attrs={
@@ -56,7 +54,6 @@ def scrape(urls=URLS, write=True, write_header=True):
                 adjacent_paths.append(list_item['href'])
         scrape(list(filter(lambda p: p not in SEEN, map(lambda p: BASE_URL + p, adjacent_paths))), write=write, write_header=False)
         print(f'exploring {url}')
-        # for p, name in tqdm(list(zip(paths, item_names)), position=1, desc=f'popular {url.split("/")[-1].split(".")[0]}', leave=False):
         for p, name in zip(paths, item_names):
             item_url = BASE_URL + p
             if item_url in SEEN:
@@ -174,4 +171,3 @@ if __name__ == '__main__':
     end_time = time.time()
     print(f'start_time: {start_time}')
     print(f'end_time: {end_time}')
-
