@@ -141,7 +141,7 @@ CACHED_MANUFACTURER_NUMBERS = set()
 from functools import reduce
 def smart_augment(query, history=[], db_dir=DB_DIR, embed_model="text-embedding-ada-002", k=2):
     query_words = query.split(' ')
-    history_words = reduce(lambda l1, l2: l1 + l2, [message['content'].split(' ') for message in history if message['role'] == 'user'], [])
+    history_words = reduce(lambda l1, l2: l1 + l2, [message['content'].split(' ') for message in history if message['role'] in {'user', 'assistant'}], [])
     global CACHED_PS_NUMBERS
     global CACHED_MANUFACTURER_NUMBERS
     if not CACHED_PS_NUMBERS:
