@@ -1,23 +1,21 @@
 import axios from "axios";
 
-const baseURL = "https://www.ocf.berkeley.edu/~lqi/instalily-server/query"
-// const baseURL = "https://2e3a-2607-f140-8801-00-1-25.ngrok-free.app/query"
+const baseURL = "https://www.ocf.berkeley.edu/~lqi/instalily-server/api/v1/query"
 
-export const getAIMessage = async (userQuery) => {
+export const getAIMessage = async (userQuery, history) => {
+  console.log(userQuery, history)
 
   const response = await axios.post(baseURL, {
     query: userQuery,
-    history: ["history0", "history1"]
+    history: history
   })
+
   console.log(response)
+
   const message = {
     role: "assistant",
-    content: response.data.query
+    content: response.data.response
   }
-    // {
-    //   role: "assistant",
-    //   content: "Connect your backend here...."
-    // }
 
   return message;
 };

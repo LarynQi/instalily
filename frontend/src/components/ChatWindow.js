@@ -7,7 +7,7 @@ function ChatWindow() {
 
   const defaultMessage = [{
     role: "assistant",
-    content: "Hi, how can I help you today?"
+    content: "Hi, I'm a Q&A chatbot for PartSelect.com. Please remain patient as I come up with my responses. How can I help you today?"
   }];
 
   const [messages,setMessages] = useState(defaultMessage)
@@ -28,9 +28,8 @@ function ChatWindow() {
       // Set user message
       setMessages(prevMessages => [...prevMessages, { role: "user", content: input }]);
       setInput("");
-
       // Call API & set assistant message
-      const newMessage = await getAIMessage(input);
+      const newMessage = await getAIMessage(input, messages);
       setMessages(prevMessages => [...prevMessages, newMessage]);
     }
   };
@@ -60,7 +59,7 @@ function ChatWindow() {
               }}
               rows="3"
             />
-            <button className="send-button" onClick={handleSend}>
+            <button className="send-button" onClick={(e) => handleSend(input)}>
               Send
             </button>
           </div>
