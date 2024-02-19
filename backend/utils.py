@@ -117,7 +117,7 @@ def augment_query(query, db_dir=DB_DIR, embed_model="text-embedding-ada-002", k=
                 CACHE[ps] = load_db(db_dir=db_dir, ps_number=ps)
             db = CACHE[ps]
             ps_augment += f'CONTEXT FOR {ps}:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
-        return ps_augment+"\n\n-----\n\n"+query
+        return ps_augment+"\n\n---CUSTOMER QUERY BELOW---\n\n"+query
     else:
         manufacturer_search = set(re.findall(MANUFACTURER_NUMBER_PATT, query)) & db_keys
         manufacturer_augment = ''
@@ -128,13 +128,13 @@ def augment_query(query, db_dir=DB_DIR, embed_model="text-embedding-ada-002", k=
                     CACHE[manufacturer_number] = load_db(db_dir=db_dir, manufacturer_number=manufacturer_number)
                 db = CACHE[manufacturer_number]
                 manufacturer_augment += f'CONTEXT FOR {manufacturer_number}:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
-            return manufacturer_augment+"\n\n-----\n\n"+query
+            return manufacturer_augment+"\n\n---CUSTOMER QUERY BELOW---\n\n"+query
         else:
             if 'unstructured' not in CACHE:
                 CACHE['unstructured'] = load_unstructured(db_dir=db_dir)
             db = CACHE['unstructured']
             unstructured_augment = f'GENERAL CONTEXT:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k+1)))
-            return unstructured_augment + "\n\n-----\n\n"+query
+            return unstructured_augment + "\n\n---CUSTOMER QUERY BELOW---\n\n"+query
 
 CACHED_PS_NUMBERS = set()
 CACHED_MANUFACTURER_NUMBERS = set()
@@ -172,7 +172,7 @@ def smart_augment(query, history=[], db_dir=DB_DIR, embed_model="text-embedding-
                 CACHE[manufacturer_number] = load_db(db_dir=db_dir, manufacturer_number=manufacturer_number)
             db = CACHE[manufacturer_number]
             manufacturer_augment += f'CONTEXT FOR {manufacturer_number}:\n' + "\n---\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
-        return ps_augment + manufacturer_augment + "\n\n-----\n\n"+query
+        return ps_augment + manufacturer_augment + "\n\n---CUSTOMER QUERY BELOW---\n\n"+query
 
 import sys
 PREPEND = sys.path[0] + '/'

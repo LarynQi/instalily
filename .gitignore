@@ -16,3 +16,4 @@ scraper/
 */__pycache__/*
 *unstructured_data.csv
 */build/*
+*log.txt
