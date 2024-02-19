@@ -52,18 +52,16 @@ def query():
             {"role": "user", "content": augmented_q}
         ]
     )
-    
+
     resp = jsonify({
-        'response': 'success',
-        'query': res.choices[0].message.content,
-        'history': history,
+        'response': res.choices[0].message.content,
         'augmented_query': augmented_q
     })
     return resp
     
 @app.route('/', methods=['GET'])
 def home():
-    return f'instalily-server. by Laryn Qi. v3.16. using MODEL={MODEL}'
+    return f'instalily-server. by Laryn Qi. v4.00 using MODEL={MODEL}'
 
 if __name__ == '__main__':
     app.run()
