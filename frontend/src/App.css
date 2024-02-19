@@ -23,3 +23,10 @@
   align-items: center;
   height: 60px;
 }
+
+.flex-container {
+  margin: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}

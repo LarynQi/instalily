@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import "./ChatWindow.css";
 import { getAIMessage } from "../api/api";
 import { marked } from "marked";
+import ClipLoader from "react-spinners/ClipLoader";
 
-function ChatWindow() {
+function ChatWindow({serverKey}) {
 
   const defaultMessage = [{
     role: "assistant",
-    content: "Hi, I'm a Q&A chatbot for PartSelect.com. Please remain patient as I come up with my responses. How can I help you today?"
+    content: "Hi, I'm a Q&A chatbot for PartSelect.com. Please be patient as I come up with my responses. How can I help you today?"
   }];
 
   const [messages,setMessages] = useState(defaultMessage)
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -21,15 +23,26 @@ function ChatWindow() {
 
   useEffect(() => {
       scrollToBottom();
-  }, [messages]);
+  }, [isLoading]);
 
   const handleSend = async (input) => {
-    if (input.trim() !== "") {
-      // Set user message
-      setMessages(prevMessages => [...prevMessages, { role: "user", content: input }]);
-      setInput("");
-      // Call API & set assistant message
-      const newMessage = await getAIMessage(input, messages);
+    setIsLoading(true);
+    try {
+      if (input.trim() !== "") {
+        // Set user message
+        setMessages(prevMessages => [...prevMessages, { role: "user", content: input }]);
+        setInput("");
+        // Call API & set assistant message
+        const newMessage = await getAIMessage(input, messages, serverKey);
+        setMessages(prevMessages => [...prevMessages, newMessage]);
+      }
+      setIsLoading(false);
+    } catch (e) {
+      setIsLoading(false);
+      const newMessage = {
+        role: "assistant",
+        content: `Sorry, a client-side error has occurred. Please try again later.\n${e.toString()}`
+      }
       setMessages(prevMessages => [...prevMessages, newMessage]);
     }
   };
@@ -45,6 +58,10 @@ function ChatWindow() {
                   )}
               </div>
           ))}
+          <ClipLoader 
+            loading={isLoading}
+            color="#36d7b7"
+          />
           <div ref={messagesEndRef} />
           <div className="input-area">
             <input
