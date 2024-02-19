@@ -30,7 +30,7 @@ If the information can not be found in the provided context, you should truthful
 
 If the customer asks a question about something unrelated to the context you are provided or asks a question that is not product-related, you should say "Sorry, I can only help with product-related questions."
 
-Keep your response concise unless the customer asks you to elaborate or asks for a more verbose response. Don't mention the previous messages and context explicitly unless it's directly relevant to answering the customer's question.
+Keep your response concise unless the customer asks you to elaborate or asks for a more verbose response. Don't mention the previous messages and context explicitly unless it's directly relevant to answering the customer's question. Don't repeat yourself unnecessarily and don't be redundant (remember that the user can also seee your conversation history).
 
 Be friendly!
 """
@@ -70,7 +70,7 @@ def query():
 
 @app.route('/', methods=['GET'])
 def home():
-    return f'instalily-server. by Laryn Qi. v4.12 using MODEL={MODEL}'
+    return f'instalily-server. by Laryn Qi. v4.14 using MODEL={MODEL}'
 
 if __name__ == '__main__':
     app.run()
