@@ -69,14 +69,14 @@ function ChatWindow({serverKey}) {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a message..."
               onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (e.key === "Enter" && !e.shiftKey && !isLoading) {
                   handleSend(input);
                   e.preventDefault();
                 }
               }}
               rows="3"
             />
-            <button className="send-button" onClick={(e) => handleSend(input)}>
+            <button className="send-button" onClick={(e) => !isLoading ? handleSend(input) : null}>
               Send
             </button>
           </div>
