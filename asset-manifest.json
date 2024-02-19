@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/instalily/static/css/main.14440ae2.css",
-    "main.js": "/instalily/static/js/main.034ef2c4.js",
+    "main.js": "/instalily/static/js/main.b2ae9ba1.js",
     "static/js/787.12438761.chunk.js": "/instalily/static/js/787.12438761.chunk.js",
     "index.html": "/instalily/index.html",
     "main.14440ae2.css.map": "/instalily/static/css/main.14440ae2.css.map",
-    "main.034ef2c4.js.map": "/instalily/static/js/main.034ef2c4.js.map",
+    "main.b2ae9ba1.js.map": "/instalily/static/js/main.b2ae9ba1.js.map",
     "787.12438761.chunk.js.map": "/instalily/static/js/787.12438761.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.14440ae2.css",
-    "static/js/main.034ef2c4.js"
+    "static/js/main.b2ae9ba1.js"
   ]
 }
