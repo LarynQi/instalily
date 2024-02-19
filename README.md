@@ -3,6 +3,8 @@ Laryn Qi
 
 ## development setup
 
+using `Python 3.9.7` and `Node v21.6.1`
+
 ### backend
 1. `cd backend && python3 -m venv env && source env/bin/activate && pip install -r requirements.txt`
 2. `python3 scrape.py`

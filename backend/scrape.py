@@ -86,17 +86,6 @@ def scrape(urls=URLS, write=True, write_header=True):
             })[0]).replace('"', '""')
             
             ### REVIEWS ###
-            # reviews = item_soup.findAll('div', attrs={
-            #     'class': 'expanded mb-4'
-            # })[1].findAll('div', attrs={
-            #     'class': 'pd__cust-review__submitted-review'
-            # })
-            # if not reviews:
-            #     reviews = item_soup.findAll('div', attrs={
-            #     'class': 'expanded mb-4'
-            # })[2].findAll('div', attrs={
-            #     'class': 'pd__cust-review__submitted-review'
-            # })
             reviews = item_soup.findAll('div', attrs={
                 'class': 'pd__cust-review__submitted-review'
             })
