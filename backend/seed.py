@@ -92,7 +92,13 @@ def seed_unstructured():
 
 if __name__ == '__main__':
     start_time = time.time()
+    seed()
+    end_time = time.time()
+    print(f'structured seed start_time: {start_time}')
+    print(f'structured seed end_time: {end_time}')
+
+    start_time = time.time()
     seed_unstructured()
     end_time = time.time()
-    print(f'start_time: {start_time}')
-    print(f'end_time: {end_time}')
+    print(f'unstructured seed start_time: {start_time}')
+    print(f'unstructured seed end_time: {end_time}')

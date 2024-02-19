@@ -167,7 +167,7 @@ def scrape(urls=URLS, write=True, write_header=True):
                     f.write(f'"{PS_number}","{manufacturer_number}","{clean_product_description}","{clean_reviews}","{clean_troubleshooting}","{clean_stories}","{clean_qna}"\n')
 if __name__ == '__main__':
     start_time = time.time()
-    scrape(write=False)
+    scrape(write=True)
     end_time = time.time()
     print(f'start_time: {start_time}')
     print(f'end_time: {end_time}')
