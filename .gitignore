@@ -8,4 +8,6 @@
 *requirements2.txt
 *test.py
 *.DS_Store
-frontend/
+*/node_modules/*
+backend/
+scraper/
