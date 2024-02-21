@@ -33,7 +33,7 @@ def scrape(urls=URLS, write=True, write_header=True):
         with open(OUT, 'w') as f:
             f.write('item_name,PS_number,manufacturer,manufacturer_number,text,url\n')
         with open(STRUCTURED_OUT, 'w') as f:
-            f.write('PS_number,manufacturer_number,description,reviews,troubleshooting,repair_stories,q_a\n')
+            f.write('PS_number,manufacturer_number,description,reviews,troubleshooting,repair_stories,q_a,url\n')
     for url in urls:
         SEEN.add(url)
         main_resp = requests.get(url)
@@ -77,7 +77,7 @@ def scrape(urls=URLS, write=True, write_header=True):
                     with open(OUT, 'a') as f:
                         f.write(f'"{clean_name}","{PS_number}","{manufacturer}","{manufacturer_number}","{clean_text}","{clean_url}"\n')
                     with open(STRUCTURED_OUT, 'a') as f:
-                        f.write(f'"{PS_number}","{manufacturer_number}","{clean_product_description}","{clean_reviews}","{clean_troubleshooting}","{clean_stories}","{clean_qna}"\n')
+                        f.write(f'"{PS_number}","{manufacturer_number}","{clean_product_description}","{clean_reviews}","{clean_troubleshooting}","{clean_stories}","{clean_qna}","{clean_url}"\n')
                 continue
             item_soup = BeautifulSoup(item_resp.content, 'html5lib')
             ### PRODUCT DESCRIPTION ###
@@ -153,7 +153,7 @@ def scrape(urls=URLS, write=True, write_header=True):
                 with open(OUT, 'a') as f:
                     f.write(f'"{clean_name}","{PS_number}","{manufacturer}","{manufacturer_number}","{clean_text}","{clean_url}"\n')
                 with open(STRUCTURED_OUT, 'a') as f:
-                    f.write(f'"{PS_number}","{manufacturer_number}","{clean_product_description}","{clean_reviews}","{clean_troubleshooting}","{clean_stories}","{clean_qna}"\n')
+                    f.write(f'"{PS_number}","{manufacturer_number}","{clean_product_description}","{clean_reviews}","{clean_troubleshooting}","{clean_stories}","{clean_qna}","{clean_url}"\n')
 if __name__ == '__main__':
     start_time = time.time()
     scrape(write=True)

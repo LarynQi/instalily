@@ -27,15 +27,24 @@ If the customer is asking a product-specific question, you will first be provide
 
 If the customer is asking a general product-related question, you will first be provided with general context that is semantically similar to their question such as troubleshooting advice, repair stories from customers, and popular questions from other customers and their corresponding answers. Use this information to answer the customer's general question.
 
-If the answer to the customer's question can not be found in the provided context, you should truthfully say "Sorry, I don't know".
+If you are asked about part compatability, pay attention to appliance type. For example, refridgerator parts are not likely to be compatible with dishwasher models. For parts and models that are the same appliance type, consider the manufacturer and provided context.
 
-Keep your response concise unless the customer asks you to elaborate or asks for a more verbose response. Don't mention the previous messages and context explicitly unless it's directly relevant to answering the customer's question. Don't repeat yourself unnecessarily and don't be redundant (remember that the user can also see your conversation history).
+You can include the SOURCE URL(s) of the pieces of context you used to answer the customer's question if you think the customer would find it valuable.
+
+In addition to the customer's most recent query, you will also be given a history of your conversation with this customer so far. Use this context to resolve ambiguities in the customer's most recent query, if possible. Be specific with your response and try to connect your response to the conversation history thus far.
+
+If you don't have enough information to answer confidently, you should truthfully say "Sorry, I don't know", but try to point the customer toward where they could find the answer. Ensure you aren't responding with any contradictions.
+
+Keep your response concise unless the customer asks you to elaborate or asks for a more verbose response. Don't mention the previous messages and context explicitly unless it's directly relevant to answering the customer's question.
+
+Make sure you are directly answering the customer's latest question. Be specific and reference parts mentioned in the conversation history if it's relevant.
 
 Be friendly!
 """
 
 MODEL = 'gpt-4-turbo-preview'
 LOG_FILE = 'log.txt'
+ERROR_LOG_FILE = 'error-log.txt'
 
 @app.route('/api/v1/query', methods=['POST'])
 @cross_origin(**api_v1_cors_config)
@@ -48,8 +57,13 @@ def query():
             'response': 'Wrong key. Refresh the page and resubmit the key.',
             'augmented_query': 'N/A'
         })
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        ip = request.environ['REMOTE_ADDR']
+    else:
+        ip = request.environ['HTTP_X_FORWARDED_FOR']
     try:
         augmented_q = smart_augment(q, history=history)
+        augment, rest = augmented_q.split(AUGMENT_DELIMITER)
         res = client.chat.completions.create(
             model=MODEL,
             messages=[
@@ -57,26 +71,31 @@ def query():
             ] + 
             history +
             [
-                {"role": "user", "content": augmented_q}
+                {"role": "system", "content": augment},
+                {"role": "user", "content": user_history(history, k=3) + q}
             ]
         )
 
+        with open(PREPEND + LOG_FILE, 'a') as f:
+            f.write(f'{ip}-{round(time.time())}: query={q}, history={str(history)}, response={res.choices[0].message.content}, augmented_query={augmented_q}, user_history={user_history(history, k=3)}\n')
         return jsonify({
             'response': res.choices[0].message.content,
             'augmented_query': augmented_q
         })
 
     except Exception as e:
-        with open(LOG_FILE, 'a') as f:
-            f.write(f'{round(time.time())}: query={q}, history={history}, exception={e}\n')
+        with open(PREPEND + ERROR_LOG_FILE, 'a') as f:
+            f.write(f'{ip}-{round(time.time())}: query={q}, history={str(history)}, exception={str(e)}\n')
         return jsonify({
-            'response': f'Sorry, a server-side error has occurred. Please try again later.\n{e}',
+            'response': f'Sorry, a server-side error has occurred. Please try again later.\n{str(e)}',
             'augmented_query': 'N/A'
         })
 
 @app.route('/', methods=['GET'])
 def home():
-    return f'instalily-server. by Laryn Qi. v4.21 using MODEL={MODEL}'
+    return f'instalily-server. by Laryn Qi. v4.27 using MODEL={MODEL}'
 
+import sys
+PREPEND = sys.path[0] + '/'
 if __name__ == '__main__':
     app.run()

@@ -14,6 +14,9 @@ scraper/
 *ping.sh
 *tmp.py
 */__pycache__/*
+*structured_data.csv
 *unstructured_data.csv
 */build/*
 *log.txt
+*/new-ada-url-db/*
+*/old-db/*

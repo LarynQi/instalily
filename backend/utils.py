@@ -35,6 +35,7 @@ def text_from_soup(soup):
     return u" ".join(t.strip() for t in visible_texts)
 
 DB_DIR = 'db/'
+# DB_DIR = 'new-ada-url-db/'
 
 def read_db_dir_keys(db_dir=DB_DIR):
     keys = set()
@@ -66,7 +67,14 @@ def read_db_dir_keys_split(db_dir=DB_DIR):
     return ps_numbers, manufacturer_numbers
 
 from langchain_community.vectorstores import FAISS
+EMBEDDING_MODEL = 'text-embedding-3-large'
+# EMBEDDING_MODEL = 'text-embedding-ada-002'
 from langchain_openai import OpenAIEmbeddings
+LARGE_DIM = 3072
+# EMBEDDINGS = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+# UNSTRUCTURED_EMBEDDINGS = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+EMBEDDINGS = OpenAIEmbeddings(model=EMBEDDING_MODEL, dimensions=LARGE_DIM)
+UNSTRUCTURED_EMBEDDINGS = OpenAIEmbeddings(model=EMBEDDING_MODEL, dimensions=LARGE_DIM // 2)
 def load_db(db_dir=DB_DIR, ps_number=None, manufacturer_number=None):
     assert not (ps_number is None and manufacturer_number is None), 'must supply either ps_number or manufacturer number'
     dbs = set(os.listdir(PREPEND + db_dir))
@@ -95,18 +103,17 @@ def load_db(db_dir=DB_DIR, ps_number=None, manufacturer_number=None):
                     ps_number = curr_ps_number
                     break
     path = db_dir + ps_number + '-' + manufacturer_number
-    embeddings = OpenAIEmbeddings()
-    return FAISS.load_local(PREPEND+path, embeddings)
+    return FAISS.load_local(PREPEND+path, EMBEDDINGS)
 
 def load_unstructured(db_dir=DB_DIR):
-    embeddings = OpenAIEmbeddings()
-    return FAISS.load_local(PREPEND+db_dir+'unstructured', embeddings)
+    return FAISS.load_local(PREPEND+db_dir+'unstructured', UNSTRUCTURED_EMBEDDINGS)
 
 import re
 PS_NUMBER_PATT = r'\b([pP][sS]\d{8})\b'
 MANUFACTURER_NUMBER_PATT = r'\b[a-zA-Z0-9]{4,11}\b'
+AUGMENT_DELIMITER = "\n\n---CUSTOMER QUERY BELOW---\n\n"
 CACHE = {}
-def _augment_query(query, db_dir=DB_DIR, embed_model="text-embedding-ada-002", k=3):
+def _augment_query(query, db_dir=DB_DIR, k=3):
     db_keys = read_db_dir_keys(db_dir)
     ps_search = set(re.findall(PS_NUMBER_PATT, query)) & db_keys
     ps_augment = ''
@@ -116,8 +123,8 @@ def _augment_query(query, db_dir=DB_DIR, embed_model="text-embedding-ada-002", k
             if ps not in CACHE:
                 CACHE[ps] = load_db(db_dir=db_dir, ps_number=ps)
             db = CACHE[ps]
-            ps_augment += f'CONTEXT FOR {ps}:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
-        return ps_augment+"\n\n---CUSTOMER QUERY BELOW---\n\n"+query
+            ps_augment += f'CONTEXT FOR {ps}:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip() + f'\nSOURCE URL: {item.metadata["url"]}' , db.similarity_search(query, k=k)))
+        return ps_augment + AUGMENT_DELIMITER + query
     else:
         manufacturer_search = set(re.findall(MANUFACTURER_NUMBER_PATT, query)) & db_keys
         manufacturer_augment = ''
@@ -127,19 +134,19 @@ def _augment_query(query, db_dir=DB_DIR, embed_model="text-embedding-ada-002", k
                 if manufacturer_number not in CACHE:
                     CACHE[manufacturer_number] = load_db(db_dir=db_dir, manufacturer_number=manufacturer_number)
                 db = CACHE[manufacturer_number]
-                manufacturer_augment += f'CONTEXT FOR {manufacturer_number}:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
-            return manufacturer_augment+"\n\n---CUSTOMER QUERY BELOW---\n\n"+query
+                manufacturer_augment += f'CONTEXT FOR {manufacturer_number}:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip() + f'\nSOURCE URL: {item.metadata["url"]}' , db.similarity_search(query, k=k)))
+            return manufacturer_augment + AUGMENT_DELIMITER +query
         else:
             if 'unstructured' not in CACHE:
                 CACHE['unstructured'] = load_unstructured(db_dir=db_dir)
             db = CACHE['unstructured']
-            unstructured_augment = f'GENERAL CONTEXT:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k+1)))
-            return unstructured_augment + "\n\n---CUSTOMER QUERY BELOW---\n\n"+query
+            unstructured_augment = f'GENERAL CONTEXT:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip() + f'\nSOURCE URL: {item.metadata["url"]}' , db.similarity_search(query, k=k+2)))
+            return unstructured_augment + AUGMENT_DELIMITER +query
 
 CACHED_PS_NUMBERS = set()
 CACHED_MANUFACTURER_NUMBERS = set()
 from functools import reduce
-def smart_augment(query, history=[], db_dir=DB_DIR, embed_model="text-embedding-ada-002", k=2):
+def smart_augment(query, history=[], db_dir=DB_DIR, k=2):
     query_words = query.split(' ')
     history_words = reduce(lambda l1, l2: l1 + l2, [message['content'].split(' ') for message in history if message['role'] in {'user', 'assistant'}], [])
     global CACHED_PS_NUMBERS
@@ -161,8 +168,8 @@ def smart_augment(query, history=[], db_dir=DB_DIR, embed_model="text-embedding-
         if 'unstructured' not in CACHE:
             CACHE['unstructured'] = load_unstructured(db_dir=db_dir)
         db = CACHE['unstructured']
-        unstructured_augment = f'GENERAL CONTEXT:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k+1)))
-        # return augment_query(query, db_dir=db_dir, embed_model=embed_model, k=k)
+        additional_k = 2 if len(history) <= 1 else 1
+        unstructured_augment = f'GENERAL CONTEXT:\n' + "\n\n---\n\n".join(map(lambda item: item.page_content.strip() + f'\nSOURCE URL: {item.metadata["url"]}' , db.similarity_search(query, k=k+additional_k)))
     else:
         unstructured_augment = ''
     for w in history_words:
@@ -177,15 +184,20 @@ def smart_augment(query, history=[], db_dir=DB_DIR, embed_model="text-embedding-
         if ps not in CACHE:
             CACHE[ps] = load_db(db_dir=db_dir, ps_number=ps)
         db = CACHE[ps]
-        ps_augment += f'CONTEXT FOR {ps}:\n' + "\n---\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
+        ps_augment += f'CONTEXT FOR {ps}:\n' + "\n---\n".join(map(lambda item: item.page_content.strip() + f'\nSOURCE URL: {item.metadata["url"]}' , db.similarity_search(query, k=k)))
     manufacturer_augment = ''
     for manufacturer_number in manufacturer_numbers_matches:
         manufacturer_number = manufacturer_number.upper()
         if manufacturer_number not in CACHE:
             CACHE[manufacturer_number] = load_db(db_dir=db_dir, manufacturer_number=manufacturer_number)
         db = CACHE[manufacturer_number]
-        manufacturer_augment += f'CONTEXT FOR {manufacturer_number}:\n' + "\n---\n".join(map(lambda item: item.page_content.strip(), db.similarity_search(query, k=k)))
-    return ps_augment + '\n\n' + manufacturer_augment + '\n\n' + unstructured_augment + "\n\n---CUSTOMER QUERY BELOW---\n\n"+query
+        manufacturer_augment += f'CONTEXT FOR {manufacturer_number}:\n' + "\n---\n".join(map(lambda item: item.page_content.strip() + f'\nSOURCE URL: {item.metadata["url"]}' , db.similarity_search(query, k=k)))
+    return ps_augment + '\n\n' + manufacturer_augment + '\n\n' + unstructured_augment + AUGMENT_DELIMITER + query
+
+def user_history(history, k=1):
+    if len(history) == 1:
+        return ''
+    return "\nCUSTOMER's QUERY HISTORY:\n" + '\n---\n'.join(reversed([history[-2*(i+1)]['content'] for i in range(min(k, len(history) // 2))])) + "\nCUSTOMER's CURRENT QUERY:\n"
 
 import sys
 PREPEND = sys.path[0] + '/'
@@ -202,8 +214,11 @@ if __name__ == '__main__':
         {"role": "assistant", "content": 'asdfsdaf'},
         {"role": "user", "content": 'How can I install part number PS11752778?'},
     ]
-    augmented = smart_augment('tell me more', history=history)
-    print(augmented, len(augmented))
+    # augmented = smart_augment('tell me more', history=history)
+    AUGMENT_DELIMITER = "\n\n---CUSTOMER QUERY BELOW---\n\n"
+    augmented_q = smart_augment('help', history=[])
+    augment, rest = augmented_q.split(AUGMENT_DELIMITER)
+    print(augment, rest)
     PRIMER = f"""You are Q&A bot for an e-commerce site. You are a highly intelligent system that answers
     customer questions about various products.
 
@@ -218,20 +233,22 @@ if __name__ == '__main__':
 
     If the customer asks a question about something unrelated to the context you are provided, you should say "Sorry, I can only help with product-related questions."
     """
-    # from openai import OpenAI
-    # client = OpenAI(
-    #     api_key=os.environ['OPENAI_API_KEY'],  # this is also the default, it can be omitted
-    # )
-    # res = client.chat.completions.create(
-    #     # model="gpt-3.5-turbo",
-    #     model="gpt-4-turbo-preview",
-    #     messages=[
-    #         {"role": "system", "content": PRIMER},
-    #         {"role": "user", "content": augmented}
-    #     ]
-    # )
+    from openai import OpenAI
+    client = OpenAI(
+        api_key=os.environ['OPENAI_API_KEY'],  # this is also the default, it can be omitted
+    )
+    res = client.chat.completions.create(
+        # model="gpt-3.5-turbo",
+        model="gpt-4-turbo-preview",
+        messages=[
+            {"role": "system", "content": PRIMER},
+            {"role": "system", "content": augment},
+            {"role": "user", "content": 'help'}
+        ]
+    )
 
-    # print(res.choices[0].message.content)
+    print(res.choices[0].message.content)
+    print(augmented_q)
     # print(augment_query('How can I install part number PS11752778?'))
     # print(load_db(DB_DIR, ps_number='PS223619'))
     # print(load_db(DB_DIR, manufacturer_number='EDR4RXD1'))

@@ -1,6 +1,9 @@
 # instalily
 Laryn Qi
 
+## architecture
+![diagram](img/diagram.png)
+
 ## development setup
 
 using `Python 3.9.7` and `Node v21.6.1`

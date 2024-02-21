@@ -65,3 +65,4 @@ webencodings==0.5.1
 Werkzeug==2.0.2
 yarl==1.9.4
 zipp==3.17.0
+pyarrow=15.0.0
